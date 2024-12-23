@@ -1,12 +1,12 @@
 import axios from "axios";
 import React, { useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 const SignUp = () => {
    
     const nameRef=useRef();
     const emailRef=useRef();
     const passwordRef=useRef();
-   
+    const navigate=useNavigate();
     const handleSignUp=async(e)=>{
         e.preventDefault();
         const name=nameRef.current.value;
@@ -22,6 +22,7 @@ const SignUp = () => {
             nameRef.current.value="";
             emailRef.current.value="";
             passwordRef.current.value="";
+            navigate("/login");
         }else{
             alert("User Registration Failed");
         }
