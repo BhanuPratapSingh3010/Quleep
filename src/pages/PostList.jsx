@@ -8,68 +8,9 @@ const PostList = () => {
   const [editingPost, setEditingPost] = useState(null);
   const [updatedTitle, setUpdatedTitle] = useState("");
   const [updatedContent, setUpdatedContent] = useState("");
-  const [updatedFiles, setUpdatedFiles] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [formDetails, setFormDetails] = useState({
-    title: "",
-    description: "",
-    file: [],
-  });
 
   const userStore = useSelector((state) => state.user);
   const token = userStore?.token;
-
-  const handleFileChange = (e) => {
-    const files = e.target.files;
-    const filesArr = [...files];
-    setFormDetails({ ...formDetails, file: filesArr });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const uploadPromises = formDetails.file.map((fileObj) => {
-        const formData = new FormData();
-        formData.append("file", fileObj);
-        formData.append("upload_preset", "blogapp");
-        return axios.post(
-          `https://api.cloudinary.com/v1_1/dfoj68y7q/upload`,
-          formData
-        );
-      });
-
-      const responses = await Promise.all(uploadPromises);
-      const uploadedFiles = responses.map((res) => ({
-        url: res.data.secure_url,
-        resource_type: res.data.resource_type,
-      }));
-
-      const finalObj = {
-        title: formDetails.title,
-        description: formDetails.description,
-        file: uploadedFiles,
-      };
-
-      const res = await axios.post(
-        "https://quleep-backend.onrender.com/api/posts",
-        finalObj,
-        {
-          headers: { Authorization: token },
-        }
-      );
-
-      if (res.data.success) {
-        setFormDetails({ title: "", description: "", file: [] });
-        setLoading(false);
-        fetchPosts();
-      }
-    } catch (error) {
-      console.error("Error uploading files:", error);
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     fetchPosts();
@@ -89,9 +30,11 @@ const PostList = () => {
       await axios.delete(`https://quleep-backend.onrender.com/api/posts/${id}`, {
         headers: { Authorization: token },
       });
+      alert("Post deleted successfully!");
       fetchPosts();
     } catch (error) {
       console.error("Error deleting post:", error);
+      alert("Error deleting post!");
     }
   };
 
@@ -99,92 +42,28 @@ const PostList = () => {
     setEditingPost(post);
     setUpdatedTitle(post.title);
     setUpdatedContent(post.content);
-    setUpdatedFiles([]);
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    setLoading(true);
-
     try {
-      let uploadedFiles = [];
-
-      if (updatedFiles.length > 0) {
-        const uploadPromises = updatedFiles.map((fileObj) => {
-          const formData = new FormData();
-          formData.append("file", fileObj);
-          formData.append("upload_preset", "blogapp");
-          return axios.post(
-            `https://api.cloudinary.com/v1_1/dfoj68y7q/upload`,
-            formData
-          );
-        });
-
-        const responses = await Promise.all(uploadPromises);
-        uploadedFiles = responses.map((res) => ({
-          url: res.data.secure_url,
-          resource_type: res.data.resource_type,
-        }));
-      }
-
-      const updateObj = {
-        title: updatedTitle,
-        content: updatedContent,
-        ...(uploadedFiles.length > 0 && { file: uploadedFiles }),
-      };
-
       await axios.put(
         `https://quleep-backend.onrender.com/api/posts/${editingPost._id}`,
-        updateObj,
-        {
-          headers: { Authorization: token },
-        }
+        { title: updatedTitle, content: updatedContent },
+        { headers: { Authorization: token } }
       );
-
+      alert("Post updated successfully!");
       setEditingPost(null);
       fetchPosts();
     } catch (error) {
       console.error("Error updating post:", error);
-    } finally {
-      setLoading(false);
+      alert("Error updating post!");
     }
   };
 
   return (
     <div className="p-4">
       <h2 className="text-2xl font-bold mb-4">Posts</h2>
-      <form onSubmit={handleSubmit} className="mb-6">
-        <input
-          type="text"
-          value={formDetails.title}
-          onChange={(e) => setFormDetails({ ...formDetails, title: e.target.value })}
-          className="w-full mb-2 p-2 border border-gray-300 rounded-md"
-          placeholder="Title"
-          required
-        />
-        <textarea
-          value={formDetails.description}
-          onChange={(e) => setFormDetails({ ...formDetails, description: e.target.value })}
-          className="w-full mb-2 p-2 border border-gray-300 rounded-md"
-          rows="3"
-          placeholder="Description"
-          required
-        ></textarea>
-        <input
-          multiple
-          type="file"
-          onChange={handleFileChange}
-          className="w-full mb-2 p-2 border border-gray-300 rounded-md"
-        />
-        <button
-          type="submit"
-          className="bg-blue-500 text-white px-3 py-2 rounded-md"
-          disabled={loading}
-        >
-          {loading ? "Submitting..." : "Submit"}
-        </button>
-      </form>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {posts.map((post) => (
           <div key={post._id} className="bg-white shadow-lg rounded-lg p-4">
@@ -206,12 +85,6 @@ const PostList = () => {
                   placeholder="Content"
                   required
                 ></textarea>
-                <input
-                  multiple
-                  type="file"
-                  onChange={(e) => setUpdatedFiles([...e.target.files])}
-                  className="w-full mb-2 p-2 border border-gray-300 rounded-md"
-                />
                 <div className="flex justify-between">
                   <button
                     type="button"
@@ -223,9 +96,8 @@ const PostList = () => {
                   <button
                     type="submit"
                     className="bg-blue-500 text-white px-3 py-2 rounded-md"
-                    disabled={loading}
                   >
-                    {loading ? "Updating..." : "Update"}
+                    Update
                   </button>
                 </div>
               </form>
@@ -243,23 +115,6 @@ const PostList = () => {
                 </div>
                 <h3 className="text-lg font-bold">{post.title}</h3>
                 <p className="text-gray-700">{post.content}</p>
-                {post.file && post.file.map((f, index) => (
-                  f.resource_type === "image" ? (
-                    <img
-                      key={index}
-                      src={f.url}
-                      alt=""
-                      className="mt-4 rounded"
-                    />
-                  ) : (
-                    <video
-                      key={index}
-                      controls
-                      src={f.url}
-                      className="mt-4 rounded"
-                    ></video>
-                  )
-                ))}
                 <div className="mt-4 flex justify-end space-x-2">
                   <button
                     onClick={() => handleEdit(post)}
@@ -273,12 +128,8 @@ const PostList = () => {
                   >
                     Delete
                   </button>
-                  <Link
-                    to={`/post/${post._id}`}
-                    className="bg-blue-500 text-white px-3 py-2 rounded-md"
-                  >
-                    View Details
-                  </Link>
+                  <Link to={`/post/${post._id}`} className="bg-blue-500 text-white px-3 py-2 rounded-md" >
+                    View Details</Link>
                 </div>
               </>
             )}
