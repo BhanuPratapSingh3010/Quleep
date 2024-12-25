@@ -8,6 +8,7 @@ const PostList = () => {
   const [editingPost, setEditingPost] = useState(null);
   const [updatedTitle, setUpdatedTitle] = useState("");
   const [updatedContent, setUpdatedContent] = useState("");
+  const [updatedFile, setUpdatedFile] = useState(null);
 
   const userStore = useSelector((state) => state.user);
   const token = userStore?.token;
@@ -44,12 +45,31 @@ const PostList = () => {
     setUpdatedContent(post.content);
   };
 
+  const handleFileChange = (e) => {
+    setUpdatedFile(e.target.files[0]);
+  };
+
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
+      let fileUrl = editingPost.file;
+
+      if (updatedFile) {
+        const formData = new FormData();
+        formData.append("file", updatedFile);
+        formData.append("upload_preset", "blogapp");
+
+        const uploadResponse = await axios.post(
+          `https://api.cloudinary.com/v1_1/dfoj68y7q/upload`,
+          formData
+        );
+
+        fileUrl = uploadResponse.data.secure_url;
+      }
+
       await axios.put(
         `https://quleep-backend.onrender.com/api/posts/${editingPost._id}`,
-        { title: updatedTitle, content: updatedContent },
+        { title: updatedTitle, content: updatedContent, file: fileUrl },
         { headers: { Authorization: token } }
       );
       alert("Post updated successfully!");
@@ -85,6 +105,11 @@ const PostList = () => {
                   placeholder="Content"
                   required
                 ></textarea>
+                <input
+                  type="file"
+                  onChange={handleFileChange}
+                  className="w-full mb-2 p-2 border border-gray-300 rounded-md"
+                />
                 <div className="flex justify-between">
                   <button
                     type="button"
@@ -115,6 +140,13 @@ const PostList = () => {
                 </div>
                 <h3 className="text-lg font-bold">{post.title}</h3>
                 <p className="text-gray-700">{post.content}</p>
+                {post.file && (
+                  <img
+                    src={post.file}
+                    alt="Post attachment"
+                    className="w-full h-auto mt-2 rounded-md"
+                  />
+                )}
                 <div className="mt-4 flex justify-end space-x-2">
                   <button
                     onClick={() => handleEdit(post)}
@@ -128,8 +160,12 @@ const PostList = () => {
                   >
                     Delete
                   </button>
-                  <Link to={`/post/${post._id}`} className="bg-blue-500 text-white px-3 py-2 rounded-md" >
-                    View Details</Link>
+                  <Link
+                    to={`/post/${post._id}`}
+                    className="bg-blue-500 text-white px-3 py-2 rounded-md"
+                  >
+                    View Details
+                  </Link>
                 </div>
               </>
             )}
