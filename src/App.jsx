@@ -6,6 +6,7 @@ import SignUp from './pages/SignUp'
 import { useSelector } from 'react-redux'
 import Navbar from './components/Navbar'
 import PostDetails from './pages/PostDetails'
+import UserProfile from './pages/UserProfile'
 const App = () => {
 
   let userStore=useSelector((state)=>state.user)
@@ -21,6 +22,7 @@ const App = () => {
         <Route path='/login' element={<Login/>}></Route>
         <Route path='/signup' element={<SignUp/>}></Route>
         <Route path="/post/:id" element={<PostDetails />} />
+        <Route path="/profile" element={<UserProfile />} />
       </Routes>
     </Router>
     </>

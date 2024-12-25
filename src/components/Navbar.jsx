@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { FaUserCircle } from 'react-icons/fa';
-import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../store/UserSlice';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../store/UserSlice";
 
 const Navbar = () => {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -16,9 +15,10 @@ const Navbar = () => {
     setDropdownOpen(!isDropdownOpen);
   };
 
-  let dispatch = useDispatch();
-  let userStore = useSelector((state) => state.user);
-  let login = userStore.login;
+  const dispatch = useDispatch();
+  const userStore = useSelector((state) => state.user);
+  const login = userStore.login;
+  const profilePicture = userStore.profilePicture || "https://via.placeholder.com/50";
 
   return (
     <nav className="bg-gray-800 h-20 flex items-center justify-between px-4">
@@ -32,21 +32,22 @@ const Navbar = () => {
           <i
             className={
               isMobileMenuOpen
-                ? 'fas fa-times text-white text-2xl'
-                : 'fas fa-bars text-white text-2xl'
+                ? "fas fa-times text-white text-2xl"
+                : "fas fa-bars text-white text-2xl"
             }
           ></i>
         </div>
 
-
         {/* Profile Dropdown */}
-        <div
-          className="relative text-white text-lg cursor-pointer ml-4"
-          onClick={toggleDropdown}
-        >
-          <FaUserCircle size={30} />
+        <div className="relative text-white text-lg cursor-pointer ml-4">
+          <img
+            src={profilePicture}
+            alt="Profile"
+            className="w-10 h-10 rounded-full"
+            onClick={toggleDropdown}
+          />
           {isDropdownOpen && (
-            <div className="absolute top-10 right-0 bg-gray-700 rounded-lg shadow-lg p-4">
+            <div className="absolute top-12 right-0 bg-gray-700 rounded-lg shadow-lg p-4">
               {!login && (
                 <Link to="/login" className="block text-white hover:text-blue-400 py-1">
                   Login
@@ -58,12 +59,17 @@ const Navbar = () => {
                 </Link>
               )}
               {login && (
-                <button
-                  onClick={() => dispatch(logout())}
-                  className="block text-white hover:text-blue-400 py-1"
-                >
-                  Logout
-                </button>
+                <>
+                  <Link to="/profile" className="block text-white hover:text-blue-400 py-1">
+                    Edit Profile
+                  </Link>
+                  <button
+                    onClick={() => dispatch(logout())}
+                    className="block text-white hover:text-blue-400 py-1"
+                  >
+                    Logout
+                  </button>
+                </>
               )}
             </div>
           )}
